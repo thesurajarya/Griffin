@@ -1,6 +1,1 @@
-# Backend files to ignore
 
-/Server/node-modules
-/Server/dist
-/Server/.env
-/Server/.env.local

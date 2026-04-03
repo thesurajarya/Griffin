@@ -1,0 +1,11 @@
+venv/Scripts/
+venv/Lib/
+venv/Include/
+venv/*.cfg
+
+.env
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
