@@ -15,8 +15,9 @@ const Dashboard = () => {
   }
 
   // Calculate severity counts for the top widget
-  const criticalCount = results.vulnerabilities.filter(v => v.severity === "CRITICAL").length;
-  const highCount = results.vulnerabilities.filter(v => v.severity === "HIGH").length;
+  // Calculate severity counts (using toUpperCase to ensure we catch everything)
+  const criticalCount = results.vulnerabilities.filter(v => v.severity && v.severity.toUpperCase() === "CRITICAL").length;
+  const highCount = results.vulnerabilities.filter(v => v.severity && v.severity.toUpperCase() === "HIGH").length;
 
   return (
     <div className="relative min-h-screen p-6 font-sans bg-black overflow-x-hidden">
@@ -32,7 +33,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-end mb-8 border-b border-slate-800 pb-4">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">
-              Threat <span className="text-blue-500">Telemetry Report</span>
+              Packet Capture <span className="text-blue-500">Analysis</span>
             </h1>
             <p className="text-slate-400 font-mono text-sm mt-1">Target: {results.filename}</p>
           </div>
@@ -58,9 +59,10 @@ const Dashboard = () => {
             <p className="text-slate-400 text-sm font-semibold mb-1">Active Services</p>
             <p className="text-3xl text-emerald-400 font-mono">{results.services.length}</p>
           </div>
-          <div className={`bg-slate-900/80 border p-5 rounded-lg shadow-lg backdrop-blur-sm ${criticalCount > 0 ? 'border-red-900/80' : 'border-slate-700/50'}`}>
-            <p className="text-slate-400 text-sm font-semibold mb-1">Critical / High CVEs</p>
-            <p className="text-3xl text-red-500 font-mono">{criticalCount} <span className="text-orange-400 text-2xl">/ {highCount}</span></p>
+          {/* Reverted UI: Just shows a single combined number */}
+          <div className={`bg-slate-900/80 border p-5 rounded-lg shadow-lg backdrop-blur-sm ${(criticalCount + highCount) > 0 ? 'border-red-900/80' : 'border-slate-700/50'}`}>
+            <p className="text-slate-400 text-sm font-semibold mb-1">Critical & High CVEs</p>
+            <p className="text-3xl text-red-500 font-mono">{criticalCount + highCount}</p>
           </div>
         </div>
 
