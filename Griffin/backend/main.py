@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from scapy.all import PcapReader, IP, TCP, UDP
 
 # Load admin credentials from your .env file
-load_dotenv()
+load_dotenv(".env2");
 
 app = FastAPI(title="Griffin SOC Backend Engine")
 
