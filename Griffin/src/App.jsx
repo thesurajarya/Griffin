@@ -1,18 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// 🔴 UPDATED PATHS: Pointing to your new pages folder
 import Login from './pages/Login'; 
 import Home from './pages/Home';   
+import Dashboard from './pages/Dashboard'; // Import the new page
 
-// The Gatekeeper component
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('soc_token');
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   return children;
 };
 
@@ -22,11 +17,22 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         
+        {/* The Upload Screen */}
+        <Route 
+          path="/home" 
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* The Results Screen */}
         <Route 
           path="/dashboard" 
           element={
             <ProtectedRoute>
-              <Home />
+              <Dashboard />
             </ProtectedRoute>
           } 
         />

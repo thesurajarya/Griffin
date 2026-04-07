@@ -1,26 +1,29 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import the navigation hook
 import ClickSpark from "./ClickSpark";
 
 const UploadFile = () => {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
-  const [results, setResults] = useState(null); // State to hold the backend data
+  const navigate = useNavigate(); // Initialize the router
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setError(null);
-    setResults(null); // Clear previous results when a new file is selected
 
     if (selectedFile) {
+      // UPGRADED: Now accepts .nmap plain text files as well
       if (
         selectedFile.name.endsWith(".pcap") ||
-        selectedFile.name.endsWith(".pcapng")
+        selectedFile.name.endsWith(".pcapng") ||
+        selectedFile.name.endsWith(".xml") ||
+        selectedFile.name.endsWith(".nmap")
       ) {
         setFile(selectedFile);
       } else {
         setFile(null);
-        setError("Invalid file type. Please upload a .pcap or .pcapng file.");
+        setError("Invalid file type. Please upload a .pcap, .pcapng, .xml, or .nmap file.");
       }
     }
   };
@@ -29,7 +32,6 @@ const UploadFile = () => {
     if (!file) return;
     setIsUploading(true);
     setError(null);
-    setResults(null);
 
     // Prepare the file to be sent via HTTP POST
     const formData = new FormData();
@@ -49,12 +51,14 @@ const UploadFile = () => {
 
       // Parse the successful response from Python
       const data = await response.json();
-      setResults(data); // Save the data to display it below
+      
+      // Route the user to the Dashboard and pass the backend data securely
+      navigate("/dashboard", { state: { results: data } });
+
     } catch (err) {
       setError(err.message || "Failed to connect to the analysis engine. Is Python running?");
-    } finally {
-      setIsUploading(false);
-    }
+      setIsUploading(false); // Only stop the spinner if there is an error
+    } 
   };
 
   return (
@@ -62,7 +66,7 @@ const UploadFile = () => {
       
       {/* Upload Dropzone */}
       <label
-        htmlFor="pcap-upload"
+        htmlFor="file-upload"
         className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300
           ${
             file
@@ -84,17 +88,17 @@ const UploadFile = () => {
               <p className="mb-2 text-sm font-semibold">
                 Click to upload or drag and drop
               </p>
-              <p className="text-xs text-slate-400">
-                .PCAP or .PCAPNG files only (Max 50MB)
+              <p className="text-xs text-slate-400 mt-1">
+                .PCAP, .XML, or .NMAP formats (Max 50MB)
               </p>
             </>
           )}
         </div>
         <input
-          id="pcap-upload"
+          id="file-upload"
           type="file"
           className="hidden"
-          accept=".pcap,.pcapng"
+          accept=".pcap,.pcapng,.xml,.nmap"
           onChange={handleFileChange}
         />
       </label>
@@ -131,7 +135,7 @@ const UploadFile = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Parsing PCAP via Scapy...
+                Running Threat Correlation...
               </span>
             ) : (
               "Run Threat Analysis"
@@ -139,52 +143,6 @@ const UploadFile = () => {
           </button>
         </ClickSpark>
       </div>
-
-      {/* NEW: Display Backend Results once analysis is complete */}
-      {results && (
-        <div className="mt-8 p-6 bg-slate-950/80 border border-green-500/50 rounded-lg shadow-inner">
-          <h3 className="text-xl font-bold text-green-400 mb-4 border-b border-green-900/50 pb-2">
-            Analysis Complete: {results.filename}
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-slate-400 text-sm font-semibold mb-1">Packets Analyzed</p>
-              <p className="text-2xl text-white font-mono">{results.total_packets_analyzed}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-slate-400 text-sm font-semibold mb-2">Discovered Assets (IPs)</p>
-              <div className="max-h-32 overflow-y-auto bg-black/50 p-3 rounded border border-slate-800 font-mono text-sm text-slate-300 scrollbar-thin scrollbar-thumb-slate-700">
-                {results.assets_discovered.length > 0 ? (
-                  results.assets_discovered.map((ip, idx) => (
-                    <div key={idx} className="hover:text-blue-400 transition-colors">{ip}</div>
-                  ))
-                ) : (
-                  <span className="text-slate-600">No IPs detected.</span>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-slate-400 text-sm font-semibold mb-2">Active Services (Ports)</p>
-              <div className="max-h-32 overflow-y-auto bg-black/50 p-3 rounded border border-slate-800 font-mono text-sm text-slate-300 scrollbar-thin scrollbar-thumb-slate-700">
-                {results.active_ports.length > 0 ? (
-                  results.active_ports.sort((a,b)=>a-b).map((port, idx) => (
-                    <div key={idx} className="inline-block bg-slate-800 px-2 py-1 m-1 rounded text-blue-300">
-                      Port {port}
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-slate-600">No active ports detected.</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
